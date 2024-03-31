@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AnimSequences/PaperZDAnimSequence.h"
 #include "Gladiator/Actor/Projectile/SProjectileClass.h"
 #include "UObject/Interface.h"
 #include "SInterface_Enemy.generated.h"
@@ -25,4 +26,7 @@ class GLADIATOR_API ISInterface_Enemy
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="EnemyInterface")
 	ASProjectileClass* GetEnemyProjectileType();
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="EnemyInterface")
+	UPaperZDAnimSequence* GetAttackAnimSequence();
 };

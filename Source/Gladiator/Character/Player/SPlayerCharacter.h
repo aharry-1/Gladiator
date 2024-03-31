@@ -29,11 +29,15 @@ public:
 	// Sets default values for this character's properties
 	ASPlayerCharacter();
 
+	virtual void OnHealthChanged(AActor* My_Instigator, float ChangeValue) override;
+
+	virtual void OnDeath(AActor* My_Instigator) override;
+
 	UFUNCTION(BlueprintCallable)
-	void OnHealthChanged(AActor* My_Instigator, float ChangeValue);
+	void OnManaChanged(AActor* My_Instigator, float ChangeValue);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void K2_OnHealthChanged(AActor* K2_Instigator, float K2_ChangeValue);
+	void K2_OnManaChanged(AActor* K2_Instigator, float K2_ChangeValue);
 
 protected:
 	// Called when the game starts or when spawned
@@ -163,6 +167,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayAbility")
 	TSubclassOf<UGameplayAbility> GA_Hurt;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayAbility")
+	TSubclassOf<UGameplayAbility> GA_Death;
+
 	UPROPERTY()
 	bool bFirstSetAttackCache;
 
@@ -171,11 +178,7 @@ protected:
 
 public:
 	//ISInterface_Player函数
-	virtual void SetHitBox_Implementation(bool bSetActive, FVector Extent, FVector Location) override;
-
-	virtual APlayerController* GetCharacterController_Implementation() override;
-
-	virtual UPaperZDAnimInstance* GetCharacterAnimInstance_Implementation() override;
+	virtual APlayerController* GetPlayerCharacterController_Implementation() override;
 
 	virtual void SetCache_Implementation() override;
 

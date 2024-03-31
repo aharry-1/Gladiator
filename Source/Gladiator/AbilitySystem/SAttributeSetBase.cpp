@@ -33,5 +33,10 @@ void USAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCallb
 		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
 
 		OnHealthChanged.Broadcast(Data.EffectSpec.GetContext().GetInstigator(), Data.EvaluatedData.Magnitude);
+
+		if (GetHealth() <= 0)
+		{
+			OnDeath.Broadcast(Data.EffectSpec.GetContext().GetInstigator());
+		}
 	}
 }

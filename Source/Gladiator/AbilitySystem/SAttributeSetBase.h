@@ -10,6 +10,8 @@
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnValueChanged, AActor*, float);
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDeath, AActor*);
+
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
@@ -36,6 +38,8 @@ public:
 	ATTRIBUTE_ACCESSORS(USAttributeSetBase, Health);
 
 	FOnValueChanged OnHealthChanged;
+
+	FOnDeath OnDeath;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Attributes")
 	FGameplayAttributeData MaxHealth;

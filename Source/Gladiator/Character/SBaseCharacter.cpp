@@ -15,6 +15,8 @@ ASBaseCharacter::ASBaseCharacter()
 	GetCharacterMovement()->JumpZVelocity = 1000.f;
 	GetCharacterMovement()->bConstrainToPlane = false;
 	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
+	GetCharacterMovement()->bConstrainToPlane = true;
+	GetCharacterMovement()->SetPlaneConstraintAxisSetting(EPlaneConstraintAxisSetting::Y);
 
 	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>("AbilitySystemComp");
 	
@@ -38,6 +40,8 @@ void ASBaseCharacter::BeginPlay()
 
 	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("State.OnGround"));
 
+	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	//赋予GA
 	if(AbilitySystemComp)
 	{
@@ -55,8 +59,11 @@ void ASBaseCharacter::BeginPlay()
 		
 		FGameplayEffectContextHandle EffectContext;
 		FPredictionKey PredictionKey;
-		UGameplayEffect* InitAttributes = NewObject<UGameplayEffect>(GetTransientPackage(), GE_InitAttributes);
-		AbilitySystemComp->ApplyGameplayEffectToSelf(InitAttributes, 1, EffectContext, PredictionKey);
+		if (GE_InitAttributes != nullptr)
+		{
+			UGameplayEffect* InitAttributes = NewObject<UGameplayEffect>(GetTransientPackage(), GE_InitAttributes);
+			AbilitySystemComp->ApplyGameplayEffectToSelf(InitAttributes, 1, EffectContext, PredictionKey);
+		}
 		
 		AbilitySystemComp->InitAbilityActorInfo(this, this);
 	}
@@ -68,8 +75,54 @@ UAbilitySystemComponent* ASBaseCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComp;
 }
 
+void ASBaseCharacter::OnHealthChanged(AActor* My_Instigator, float ChangeValue)
+{
+	if (My_Instigator)
+	{
+		if (My_Instigator->GetActorLocation().X < GetActorLocation().X)
+		{
+			LaunchCharacter(FVector(-5.0f, 0.0, 1.0f), true, true);
+		}
+		else if (My_Instigator->GetActorLocation().X > GetActorLocation().X)
+		{
+			LaunchCharacter(FVector(5.0f, 0.0, 1.0f), true, true);
+		}
+	}
+	
+	K2_OnHealthChanged(My_Instigator, ChangeValue);
+}
+
+void ASBaseCharacter::OnDeath(AActor* My_Instigator)
+{
+	K2_OnDeath(My_Instigator);
+}
+
+UPaperZDAnimInstance* ASBaseCharacter::GetCharacterAnimInstance_Implementation()
+{
+	return GetAnimInstance();
+}
+
+void ASBaseCharacter::SetHitBox_Implementation(bool bSetActive, FVector Extent, FVector Location)
+{
+	HitBox->SetBoxExtent(Extent, true);
+	HitBox->SetRelativeLocation(Location);
+	if (bSetActive)
+	{
+		HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	else
+	{
+		HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+UPaperZDAnimSequence* ASBaseCharacter::GetFiresAnimSequence_Implementation()
+{
+	return FiresAnimSequence;
+}
+
 void ASBaseCharacter::BeginOverlap_HitBox(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                          UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor && OtherActor != this && OtherActor->GetClass()->ImplementsInterface(UAbilitySystemInterface::StaticClass()))
 	{

@@ -23,8 +23,14 @@ class GLADIATOR_API ISInterface_PayerController
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PayerControllerInterface")
-	void InitHealth(float MaxHealth);
+	void InitHealth(float MaxHealth, float Health);
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PayerControllerInterface")
 	void OnHealthChange(float Health, float ChangeValue);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PayerControllerInterface")
+	void InitMana(float MaxMana, float Mana);
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PayerControllerInterface")
+	void OnManaChange(float Mana, float ChangeValue);
 };

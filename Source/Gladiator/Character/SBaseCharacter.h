@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "PaperZDCharacter.h"
+#include "Gladiator/Interface/SInterface_Character.h"
 #include "SBaseCharacter.generated.h"
 
 class UGameplayEffect;
@@ -14,7 +15,7 @@ class UAbilitySystemComponent;
  * 
  */
 UCLASS()
-class GLADIATOR_API ASBaseCharacter : public APaperZDCharacter, public IAbilitySystemInterface
+class GLADIATOR_API ASBaseCharacter : public APaperZDCharacter, public IAbilitySystemInterface, public ISInterface_Character
 {
 	GENERATED_BODY()
 
@@ -37,6 +38,24 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Abilities")
 	TSubclassOf<UGameplayEffect> GE_InitAttributes;
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void OnHealthChanged(AActor* My_Instigator, float ChangeValue);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_OnHealthChanged(AActor* K2_Instigator, float K2_ChangeValue);
+		
+	UFUNCTION(BlueprintCallable)
+	virtual void OnDeath(AActor* My_Instigator);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_OnDeath(AActor* K2_Instigator);
+	
+	virtual UPaperZDAnimInstance* GetCharacterAnimInstance_Implementation() override;
+
+	virtual void SetHitBox_Implementation(bool bSetActive, FVector Extent, FVector Location) override;
+
+	virtual UPaperZDAnimSequence* GetFiresAnimSequence_Implementation() override;
 
 protected:
 	
@@ -54,4 +73,7 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Abilities")
 	TSubclassOf<UGameplayEffect> DamageGameplayEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Abilities")
+	UPaperZDAnimSequence* FiresAnimSequence;
 };

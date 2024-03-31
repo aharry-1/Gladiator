@@ -50,7 +50,8 @@ ASPlayerCharacter::ASPlayerCharacter()
 
 void ASPlayerCharacter::OnHealthChanged(AActor* My_Instigator, float ChangeValue)
 {
-	K2_OnHealthChanged(My_Instigator, ChangeValue);
+	Super::OnHealthChanged(My_Instigator, ChangeValue);
+	
 	if (ChangeValue < 0)
 	{
 		if (AbilitySystemComp)
@@ -58,6 +59,21 @@ void ASPlayerCharacter::OnHealthChanged(AActor* My_Instigator, float ChangeValue
 			AbilitySystemComp->TryActivateAbilityByClass(GA_Hurt);
 		}
 	}
+}
+
+void ASPlayerCharacter::OnDeath(AActor* My_Instigator)
+{
+	Super::OnDeath(My_Instigator);
+
+	if (AbilitySystemComp)
+	{
+		AbilitySystemComp->TryActivateAbilityByClass(GA_Death);
+	}
+}
+
+void ASPlayerCharacter::OnManaChanged(AActor* My_Instigator, float ChangeValue)
+{
+	K2_OnManaChanged(My_Instigator, ChangeValue);
 }
 
 // Called when the game starts or when spawned
@@ -77,9 +93,11 @@ void ASPlayerCharacter::BeginPlay()
 
 	SpriteDefaultLocation = GetSprite()->GetRelativeLocation();
 
-	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
 	AttributeSet->OnHealthChanged.AddUObject(this, &ASPlayerCharacter::OnHealthChanged);
+
+	AttributeSet->OnManaChanged.AddUObject(this, &ASPlayerCharacter::OnManaChanged);
+	
+	AttributeSet->OnDeath.AddUObject(this, &ASPlayerCharacter::OnDeath);
 	
 	//UAbilityAsync_WaitGameplayTagRemoved::WaitGameplayTagRemoveFromActor(this, FGameplayTag::RequestGameplayTag("Ready.NormalAttack"))->Removed.AddDynamic(this, &ASPlayerCharacter::ASPlayerCharacter::WaitEndAttack);
 	//WaitAttackAsync->Removed.AddDynamic(this, &ASPlayerCharacter::ASPlayerCharacter::WaitEndAttack);
@@ -91,7 +109,7 @@ void ASPlayerCharacter::WallDetectionOverlap(UPrimitiveComponent* OverlappedComp
 	{
 		bIsCloseWall = true;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("BeginWallDetectionBoxOverlap"));
+	//UE_LOG(LogTemp, Warning, TEXT("BeginWallDetectionBoxOverlap"));
 }
 
 void ASPlayerCharacter::JumpWallSlide()
@@ -129,6 +147,8 @@ void ASPlayerCharacter::EndWallSlide(UPrimitiveComponent* OverlappedComponent, A
 		
 		bIsCloseWall = false;
 		GetCharacterMovement()->GravityScale = 2.2f;
+		
+		GetSprite()->SetRelativeLocation(SpriteDefaultLocation);
 	}
 }
 
@@ -174,17 +194,24 @@ void ASPlayerCharacter::BeginOverlap_HitBox(UPrimitiveComponent* OverlappedCompo
 		if (AbilitySystemComp)
 		{
 			//击退
-			FVector KnockbackDirection = -GetActorForwardVector();
-			float KnockbackForce;
+			FVector KnockBackDirection = -GetActorForwardVector();
+			FRotator CapsuleRotator = GetCapsuleComponent()->GetRelativeRotation();
+			KnockBackDirection.Z = KnockBackDirection.X * sin(CapsuleRotator.Pitch);
+			CapsuleRotator.Pitch >= 0 ? KnockBackDirection.Z : KnockBackDirection.Z = -KnockBackDirection.Z;
+			
+			float KnockBackForce;
 			if (AbilitySystemComp->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("State.OnGround")))
 			{
-				KnockbackForce = 600.0f;
+				KnockBackForce = 200.0f;
 			}
 			else
 			{
-				KnockbackForce = 250.0f;
+				KnockBackForce = 100.0f;
 			}
-			LaunchCharacter(KnockbackDirection * KnockbackForce, true, false);
+			KnockBackDirection *= KnockBackForce;
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *KnockBackDirection.ToString());
+			
+			LaunchCharacter(KnockBackDirection, false, false);
 		}
 		else
 		{
@@ -323,6 +350,7 @@ void ASPlayerCharacter::Attack()
 	{
 		if (AbilitySystemComp->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("State.WallSlide")))
 		{
+			//弹射一小段距离防止贴墙
 			if (GetActorRotation().Vector().X > 0)
 			{
 				LaunchCharacter(FVector(-50.0f, 0.0, 10.0f), true, true);
@@ -331,6 +359,7 @@ void ASPlayerCharacter::Attack()
 			{
 				LaunchCharacter(FVector(50.0f, 0.0, 10.0f), true, true);
 			}
+			//转身
 			if (AController* PlayerController = GetController())
 			{
 				if (GetActorRotation().Vector().X <= 0)
@@ -444,21 +473,7 @@ void ASPlayerCharacter::ShowUI()
 	}
 }
 
-void ASPlayerCharacter::SetHitBox_Implementation(bool bSetActive, FVector Extent, FVector Location)
-{
-	HitBox->SetBoxExtent(Extent, true);
-	HitBox->SetRelativeLocation(Location);
-	if (bSetActive)
-	{
-		HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-	else
-	{
-		HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-}
-
-APlayerController* ASPlayerCharacter::GetCharacterController_Implementation()
+APlayerController* ASPlayerCharacter::GetPlayerCharacterController_Implementation()
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
@@ -466,11 +481,6 @@ APlayerController* ASPlayerCharacter::GetCharacterController_Implementation()
 		return PlayerController;
 	}
 	return nullptr;
-}
-
-UPaperZDAnimInstance* ASPlayerCharacter::GetCharacterAnimInstance_Implementation()
-{
-	return GetAnimInstance();
 }
 
 void ASPlayerCharacter::SetCache_Implementation()

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PaperZDAnimInstance.h"
 #include "Gladiator/Actor/Projectile/SPlayerProjectile.h"
 #include "UObject/Interface.h"
 #include "SInterface_Player.generated.h"
@@ -25,13 +24,7 @@ class GLADIATOR_API ISInterface_Player
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PlayerInterface")
-	void SetHitBox(bool bSetActive, FVector Extent, FVector Location);
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PlayerInterface")
-	UPaperZDAnimInstance* GetCharacterAnimInstance();
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PlayerInterface")
-	APlayerController* GetCharacterController();
+	APlayerController* GetPlayerCharacterController();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="PlayerInterface")
 	void SetCache();
