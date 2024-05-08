@@ -37,6 +37,7 @@ protected:
 	UPROPERTY()
 	UUserWidget* AttributeUI;
 
+public:
 	UPROPERTY(BlueprintReadWrite)
 	UUserWidget* HealthUI;
 	

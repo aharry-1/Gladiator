@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "Gladiator/Interface/SInterface_Player.h"
+#include "Gladiator/Actor/Projectile/SPlayerProjectile.h"
 #include "SPlayerState.generated.h"
 
-class ASPlayerProjectile;
 
 /**
  * 

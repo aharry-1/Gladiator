@@ -2,7 +2,7 @@
 
 
 #include "SPlayerState.h"
-#include "Gladiator/Actor/Projectile/SPlayerProjectile.h"
+
 
 ASPlayerState::ASPlayerState()
 {

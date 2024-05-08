@@ -12,10 +12,14 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerStart.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Gladiator/AbilitySystem/SAttributeSet_Player.h"
+#include "Gladiator/Framework/SGameInstance.h"
 #include "Gladiator/Framework/SPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 // Sets default values
@@ -65,6 +69,11 @@ void ASPlayerCharacter::OnDeath(AActor* My_Instigator)
 {
 	Super::OnDeath(My_Instigator);
 
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	DisableInput(PC);
+	
+	Cast<ASPlayerController>(GetController())->HealthUI->RemoveFromParent();
+	
 	if (AbilitySystemComp)
 	{
 		AbilitySystemComp->TryActivateAbilityByClass(GA_Death);
@@ -76,10 +85,20 @@ void ASPlayerCharacter::OnManaChanged(AActor* My_Instigator, float ChangeValue)
 	K2_OnManaChanged(My_Instigator, ChangeValue);
 }
 
+void ASPlayerCharacter::SeamlessTravelTo(FString URL)
+{
+	if (IsLocallyControlled())
+	{
+		GetPlayerCharacterController_Implementation()->ClientTravel(URL, ETravelType::TRAVEL_Relative, true);
+	}
+}
+
 // Called when the game starts or when spawned
 void ASPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UKismetSystemLibrary::PrintString(this,FString("ASPlayerCharacter::BeginPlay()"),false,true);
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
@@ -98,6 +117,45 @@ void ASPlayerCharacter::BeginPlay()
 	AttributeSet->OnManaChanged.AddUObject(this, &ASPlayerCharacter::OnManaChanged);
 	
 	AttributeSet->OnDeath.AddUObject(this, &ASPlayerCharacter::OnDeath);
+
+	// //更换关卡时同步ASC
+	// USGameInstance* GameInstance = Cast<USGameInstance>(GetGameInstance());
+	// if (GameInstance != nullptr)
+	// {
+	// 	if (GameInstance->IsWin)
+	// 	{
+	// 		if (AbilitySystemComp)
+	// 		{
+	// 			for (auto Ability : GameInstance->ASC.Abilities)
+	// 			{
+	// 				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(Ability.GetClass(), 1, 0));
+	// 			}
+	// 			
+	// 			for (int i=0; GameInstance->ASC.Attributes[i] != nullptr; i++)
+	// 			{
+	// 				FGameplayAttribute Attribute = GameInstance->ASC.Attributes[i];
+	// 				
+	// 				UGameplayEffect* GameplayEffect = NewObject<UGameplayEffect>();
+	// 				GameplayEffect->DurationPolicy = EGameplayEffectDurationType::Instant;
+	// 				
+	// 				FGameplayModifierInfo Modifier;
+	// 				Modifier.Attribute = Attribute;
+	// 				Modifier.ModifierOp = EGameplayModOp::Override;
+	// 				Modifier.ModifierMagnitude = FGameplayEffectModifierMagnitude(GameInstance->ASC.AttributeValues[i]);
+	//
+	// 				GameplayEffect->Modifiers.Add(Modifier);
+	// 				FGameplayEffectContextHandle EffectContext;
+	// 				
+	// 				AbilitySystemComp->ApplyGameplayEffectToSelf(GameplayEffect, 1, EffectContext);
+	// 			}
+	//
+	// 			for (auto Tag : GameInstance->ASC.Tags)
+	// 			{
+	// 				AbilitySystemComp->AddLooseGameplayTag(Tag);
+	// 			}
+	// 		}
+	// 	}
+	// }
 	
 	//UAbilityAsync_WaitGameplayTagRemoved::WaitGameplayTagRemoveFromActor(this, FGameplayTag::RequestGameplayTag("Ready.NormalAttack"))->Removed.AddDynamic(this, &ASPlayerCharacter::ASPlayerCharacter::WaitEndAttack);
 	//WaitAttackAsync->Removed.AddDynamic(this, &ASPlayerCharacter::ASPlayerCharacter::WaitEndAttack);
@@ -341,7 +399,6 @@ void ASPlayerCharacter::Move(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	
 	AddMovementInput(FVector(1.0, 0.0, 0.0), MovementVector.X);
-	
 }
 
 void ASPlayerCharacter::Attack()
@@ -586,4 +643,28 @@ void ASPlayerCharacter::ClearCache_Implementation()
 void ASPlayerCharacter::SetPlayerAttackMultiplier_Implementation(float AttackMultiplier)
 {
 	AttributeSet->SetAttackMultiplier(AttackMultiplier);
+}
+
+void ASPlayerCharacter::SwitchLevel_Implementation()
+{
+	AActor* PlayerStart = UGameplayStatics::GetActorOfClass(GetWorld(), APlayerStart::StaticClass());
+	if (PlayerStart != nullptr)
+	{
+		SetActorLocation(PlayerStart->GetActorLocation());
+	}
+
+	FGameplayEffectContextHandle EffectContext;
+	FPredictionKey PredictionKey;
+	if (GE_InitAttributes != nullptr)
+	{
+		UGameplayEffect* InitAttributes = NewObject<UGameplayEffect>(GetTransientPackage(), GE_InitAttributes);
+		AbilitySystemComp->ApplyGameplayEffectToSelf(InitAttributes, 1, EffectContext, PredictionKey);
+	}
+	if (AbilitySystemComp->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("GameplayEffect.HaveFires")))
+	{
+		UGameplayEffect* InitAttributes = NewObject<UGameplayEffect>(GetTransientPackage(), GE_GetFires);
+		AbilitySystemComp->ApplyGameplayEffectToSelf(InitAttributes, 1, EffectContext, PredictionKey);
+	}
+	
+	K2_SwitchLevel();
 }

@@ -5,6 +5,7 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Gladiator/AbilitySystem/SAttributeSet_Enemy.h"
 #include "Gladiator/AI/SAIController.h"
 
@@ -68,6 +69,14 @@ void ASEnemyCharacter::OnHealthChanged(AActor* My_Instigator, float ChangeValue)
 void ASEnemyCharacter::OnDeath(AActor* My_Instigator)
 {
 	Super::OnDeath(My_Instigator);
+
+	AAIController* AIC = Cast<AAIController>(GetController());
+	if(AIC)
+	{
+		AIC->GetBrainComponent()->StopLogic("Killed");
+	}
+	
+	GetCharacterMovement()->DisableMovement();
 	
 	if (AbilitySystemComp)
 	{

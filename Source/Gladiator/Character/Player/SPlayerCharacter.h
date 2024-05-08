@@ -39,6 +39,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void K2_OnManaChanged(AActor* K2_Instigator, float K2_ChangeValue);
 
+	UFUNCTION(BlueprintCallable, Category = "SeamlessTravel")
+	void SeamlessTravelTo(FString URL);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_SwitchLevel();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -170,6 +176,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayAbility")
 	TSubclassOf<UGameplayAbility> GA_Death;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayAbility")
+	TSubclassOf<UGameplayEffect>  GE_GetFires;
+
 	UPROPERTY()
 	bool bFirstSetAttackCache;
 
@@ -188,4 +197,5 @@ public:
 
 	virtual void SetPlayerAttackMultiplier_Implementation(float AttackMultiplier) override;
 
+	virtual void SwitchLevel_Implementation() override;
 };

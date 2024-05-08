@@ -64,7 +64,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	FVector SpriteOffset;
-		
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UBoxComponent* HitBox;
 

@@ -25,6 +25,7 @@ void ASPlayerController::BeginPlay()
 		HealthUI = CreateWidget<UUserWidget>(this, UI_Health);
 		HealthUI->AddToViewport();
 	}
+
 }
 
 void ASPlayerController::ShowAttributeUI()

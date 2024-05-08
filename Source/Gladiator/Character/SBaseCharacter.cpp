@@ -6,7 +6,9 @@
 #include "AbilitySystemComponent.h"
 #include "PaperFlipbookComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Gladiator/Framework/SPlayerController.h"
 
 
 ASBaseCharacter::ASBaseCharacter()
@@ -64,9 +66,9 @@ void ASBaseCharacter::BeginPlay()
 			UGameplayEffect* InitAttributes = NewObject<UGameplayEffect>(GetTransientPackage(), GE_InitAttributes);
 			AbilitySystemComp->ApplyGameplayEffectToSelf(InitAttributes, 1, EffectContext, PredictionKey);
 		}
-		
 		AbilitySystemComp->InitAbilityActorInfo(this, this);
 	}
+	
 	HitBox->OnComponentBeginOverlap.AddDynamic(this, &ASBaseCharacter::BeginOverlap_HitBox);
 }
 
@@ -94,6 +96,9 @@ void ASBaseCharacter::OnHealthChanged(AActor* My_Instigator, float ChangeValue)
 
 void ASBaseCharacter::OnDeath(AActor* My_Instigator)
 {
+	GetCapsuleComponent() -> SetCollisionProfileName("Spectator");
+	GetSprite()->SetCollisionProfileName("Spectator");
+
 	K2_OnDeath(My_Instigator);
 }
 

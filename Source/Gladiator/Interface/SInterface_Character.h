@@ -31,4 +31,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="EnemyInterface")
 	UPaperZDAnimSequence* GetFiresAnimSequence();
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="EnemyInterface")
+	void SwitchLevel();
 };
